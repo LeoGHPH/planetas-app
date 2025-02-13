@@ -1,10 +1,7 @@
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 import '../modelos/planeta.dart';
-
-
 
 class ControlePlaneta {
   static Database? _bd;
@@ -15,9 +12,9 @@ class ControlePlaneta {
     return _bd!;
   }
 
-  Future<Database> _initBD(String LocalArquivo) async {
+  Future<Database> _initBD(String localArquivo) async {
     final caminhoBD = await getDatabasesPath();
-    final caminho = join(caminhoBD, LocalArquivo);
+    final caminho = join(caminhoBD, localArquivo);
     return await openDatabase(caminho, version: 1, onCreate: _criarBD);
   }
 
@@ -34,19 +31,50 @@ CREATE TABLE planetas (
     await bd.execute(sql);
   }
 
-
- Future<List<Planeta>> lerPlanetas() async {
+  Future<List<Planeta>> lerPlanetas() async {
     final db = await bd;
     final resultado = await db.query('planetas');
     return resultado.map((map) => Planeta.fromMap(map)).toList();
   }
-  
+
   Future<int> inserirPlaneta(Planeta planeta) async {
     final db = await bd;
-    return await db.insert('Planetas', planeta.toMap());
+    return await db.insert('planetas', planeta.toMap());
   }
 
-  static of(BuildContext context) {}
+  Future<int> alterarPlaneta(Planeta planeta) async {
+    final db = await bd;
+    return db.update(
+      'planetas',
+      planeta.toMap(),
+      where: 'id = ?',
+      whereArgs: [planeta.id],
+    );
+  }
 
- 
+  Future<void> salvarPlanetas(List<Planeta> planetas) async {
+    final db = await bd;
+    for (var planeta in planetas) {
+      await db.insert(
+        'planetas',
+        planeta.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+  }
+
+  Future<int> atualizarPlaneta(Planeta planeta) async {
+    final db = await bd;
+    return await db.update(
+      'planetas',
+      planeta.toMap(),
+      where: 'id = ?',
+      whereArgs: [planeta.id],
+    );
+  }
+
+  Future<int> excluirPlaneta(int id) async {
+    final db = await bd;
+    return await db.delete('planetas', where: 'id = ?', whereArgs: [id]);
+  }
 }
