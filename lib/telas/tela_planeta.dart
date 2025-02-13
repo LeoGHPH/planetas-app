@@ -1,33 +1,40 @@
+import 'package:bleave/controles/controle_planeta.dart' show ControlePlaneta;
 import 'package:flutter/material.dart';
-import 'package:myapp/controles/controle_planeta.dart';
 
 import '../modelos/planeta.dart';
 
 class TelaPlaneta extends StatefulWidget {
-  const TelaPlaneta({super.key});
+  final bool isIncluir;
+  final Planeta planeta;
+  final Function() onFinalizado;
+
+  const TelaPlaneta({
+    super.key,
+    required this.isIncluir,
+    required this.onFinalizado,
+    required this.planeta,
+  }); //
 
   @override
   State<TelaPlaneta> createState() => _TelaPlanetaState();
 }
 
 class _TelaPlanetaState extends State<TelaPlaneta> {
-
   final _formKey = GlobalKey<FormState>();
-
   final TextEditingController _nomeController = TextEditingController();
   final TextEditingController _tamanhoController = TextEditingController();
   final TextEditingController _distanciaController = TextEditingController();
   final TextEditingController _apelidoController = TextEditingController();
-
-  final Planeta _planeta = Planeta.vazio();
   final ControlePlaneta _controlePlaneta = ControlePlaneta();
+  late Planeta _planeta;
 
   @override
   void initState() {
-    //_nomeController.text = "";
-    //_tamanhoController.text = "12742";
-    //_distanciaController.text = "149.600.000";
-    //_apelidoController.text = "Home";
+    _planeta = widget.planeta;
+    _nomeController.text = _planeta.nome;
+    _tamanhoController.text = _planeta.tamanho.toString();
+    _distanciaController.text = _planeta.distancia.toString();
+    _apelidoController.text = _planeta.apelido ?? '';
 
     super.initState();
   }
@@ -42,22 +49,33 @@ class _TelaPlanetaState extends State<TelaPlaneta> {
     super.dispose();
   }
 
-  Future<void> _inserirPlaneta() async {
+  Future<void> _inserirplaneta() async {
     await _controlePlaneta.inserirPlaneta(_planeta);
+  }
+
+  Future<void> _alterarPlaneta() async {
+    await _controlePlaneta.alterarPlaneta(_planeta);
   }
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
       // Dados validados com sucesso
       _formKey.currentState!.save();
-      _inserirPlaneta();
 
+      if (widget.isIncluir) {
+        _inserirplaneta();
+      } else {
+        _alterarPlaneta();
+      }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Dados do planeta salvos com sucesso!\n')),
+        SnackBar(
+          content: Text(
+            'Dados do planeta foram ${widget.isIncluir ? 'incluídos' : 'alterados'} com sucesso!\n',
+          ),
+        ),
       );
       Navigator.of(context).pop();
-
-      
+      widget.onFinalizado();
     }
   }
 
@@ -164,9 +182,19 @@ class _TelaPlanetaState extends State<TelaPlaneta> {
                 ),
 
                 const SizedBox(height: 20.0),
-                ElevatedButton(
-                  onPressed: _submitForm, //submitForm,
-                  child: const Text('Salvar'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Cancelar'),
+                    ),
+
+                    ElevatedButton(
+                      onPressed: _submitForm, //submitForm,
+                      child: const Text('Salvar'),
+                    ),
+                  ],
                 ),
               ],
             ),
