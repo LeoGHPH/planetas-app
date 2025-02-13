@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:myapp/controles/controle_planeta.dart';
 import 'package:myapp/modelos/planeta.dart';
@@ -55,8 +56,36 @@ class _MyHomePageState extends State<MyHomePage> {
   void _incluirPlaneta(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => TelaPlaneta()),
+      MaterialPageRoute(
+        builder:
+            (context) => TelaPlaneta(
+              planeta: Planeta.vazio(),
+              isIncluir: true,
+              onFinalizado: () {},
+            ),
+      ),
     );
+  }
+
+  void _alterarPlaneta(BuildContext context, Planeta planeta) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => TelaPlaneta(
+              isIncluir: false,
+              planeta: planeta,
+              onFinalizado: () {
+                _lerPlanetas();
+              },
+            ), // TelaPlaneta
+      ), // MaterialPageRoute
+    );
+  }
+
+  void excluirPlaneta(int id) async {
+    await _controlePlaneta.excluirPlaneta(id);
+    _lerPlanetas();
   }
 
   @override
@@ -74,6 +103,20 @@ class _MyHomePageState extends State<MyHomePage> {
           return ListTile(
             title: Text(planeta.nome),
             subtitle: Text(planeta.distancia.toString()),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  onPressed: () => _alterarPlaneta(context, planeta),
+                ),
+
+                IconButton(
+                  icon: const Icon(Icons.delete),
+                  onPressed: () => excluirPlaneta(planeta.id!),
+                ),
+              ],
+            ),
           );
         },
       ),
